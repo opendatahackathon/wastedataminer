@@ -15,10 +15,7 @@ logger = logging.getLogger(__name__)
  
 PHOTO, CHOOSING = range(2)
 
-
- 
-def start(bot, update):
-    columns = 3
+def make_keyboard(columns):
     i = 0
     reply_keyboard = []
     tmp_keyboard=[]
@@ -29,11 +26,16 @@ def start(bot, update):
             if row[1] != 'item':
                 i+=1
                 tmp_keyboard.append(row[1])
-                if i > 2:
+                if i >= columns:
                     reply_keyboard.append(tmp_keyboard)
                     tmp_keyboard = []
                     i=0
-
+    reply_keyboard.append(['cancel'])
+    return reply_keyboard
+  
+ 
+def start(bot, update):
+    reply_keyboard = make_keyboard(2)
     update.message.reply_text(
         'Выбирите категорию отходов и загрузите фотографию.',
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
@@ -58,8 +60,9 @@ def photo(bot, update, user_data):
     photo_file.download(file_name)
     logger.info("Photo of %s: %s" % (user.first_name, file_name))
     update.message.reply_text('Превосходно! Спасибо за предоставленное изображение!')
- 
-    return PHOTO
+    reply_keyboard = make_keyboard(2)
+    update.message.reply_text('Выбирите категорию отходов и загрузите фотографию.',reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    return CHOOSING
  
  
 def skip_photo(bot, update):
@@ -119,15 +122,12 @@ def main():
     dp.add_error_handler(error)
  
     # Start the Bot
-    #updater.start_polling()
+    updater.start_polling()
  
     # Run the bot until the you presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
-    #updater.idle()
-    updater.start_webhook(listen='127.0.0.1', port=5000, url_path=TOKEN)
-    updater.bot.setWebhook(webhook_url='https://118.226.135.41/'+TOKEN,
-                       certificate=open('cert.pem', 'rb'))
+    updater.idle()
  
  
 if __name__ == '__main__':
